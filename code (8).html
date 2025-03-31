@@ -1,0 +1,1773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sea Asia 2025 Lead Management</title>
+    <!-- External Libraries via CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Tesseract.js CDN (Uncommented to enable OCR) -->
+    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
+
+    <style>
+        /* Global Styles & Resets */
+        :root {
+            --primary-color: #005f73;
+            --secondary-color: #0a9396;
+            --accent-color: #94d2bd;
+            --bg-color: #e9d8a6;
+            --text-color: #001219;
+            --light-text: #f8f9fa;
+            --hot-lead: #d00000;
+            --warm-lead: #faa307;
+            --cold-lead: #6c757d;
+            --success-color: #2a9d8f;
+            --error-color: #e76f51;
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            height: 100%;
+            font-family: var(--font-family);
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            line-height: 1.6;
+            overflow-x: hidden; /* Prevent horizontal scroll */
+        }
+
+        #app {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            position: relative;
+            z-index: 1; /* Ensure content is above background */
+        }
+
+        /* Three.js Background Canvas */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.6; /* Make it less distracting */
+        }
+
+        /* Navigation */
+        nav {
+            background-color: var(--primary-color);
+            padding: 0.8rem 1.5rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000; /* Keep nav on top */
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+            gap: 1rem;
+        }
+
+        nav ul li a {
+            color: var(--light-text);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+            font-weight: 500;
+            display: inline-block; /* Ensure padding works correctly */
+        }
+
+        nav ul li a:hover, nav ul li a.active {
+            background-color: var(--secondary-color);
+        }
+
+        /* Page Container */
+        main {
+            flex-grow: 1;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 1rem auto; /* Center content */
+            background-color: rgba(255, 255, 255, 0.85); /* Semi-transparent white background */
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .page {
+            display: none; /* Hide pages by default */
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .page.active {
+            display: block; /* Show active page */
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Headings and General Elements */
+        h1, h2, h3 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        button {
+            background-color: var(--secondary-color);
+            color: var(--light-text);
+            border: none;
+            padding: 0.7rem 1.2rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            font-size: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        button:hover {
+            background-color: var(--accent-color);
+            color: var(--primary-color);
+        }
+         button:active {
+            transform: scale(0.98);
+         }
+
+        button.danger {
+             background-color: var(--error-color);
+        }
+         button.danger:hover {
+             background-color: #d00000;
+         }
+         button.success {
+             background-color: var(--success-color);
+         }
+         button.success:hover {
+             background-color: #1a746a;
+         }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="url"],
+        input[type="search"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 0.7rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-actions {
+            margin-top: 1.5rem;
+            text-align: right;
+        }
+
+        /* Lead Type Tags */
+        .lead-tag {
+            display: inline-block;
+            padding: 0.2em 0.6em;
+            font-size: 0.85em;
+            font-weight: 700;
+            line-height: 1;
+            color: #fff;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border-radius: 0.25rem;
+            margin-left: 5px;
+        }
+
+        .lead-tag-hot { background-color: var(--hot-lead); }
+        .lead-tag-warm { background-color: var(--warm-lead); }
+        .lead-tag-cold { background-color: var(--cold-lead); }
+
+        /* Table Styles */
+        .table-container {
+            overflow-x: auto; /* Allow horizontal scrolling on small screens */
+            margin-top: 1.5rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px; /* Prevent excessive squishing */
+        }
+
+        th, td {
+            padding: 0.8rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            vertical-align: middle;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            font-weight: 600;
+            cursor: pointer; /* Indicate sortable columns */
+        }
+        th:hover {
+            background-color: #e8e8e8;
+        }
+
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+
+        /* Filter/Search Controls */
+        .table-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            align-items: center;
+        }
+        .table-controls input[type="search"] {
+            width: auto; /* Don't take full width */
+            flex-grow: 1; /* Allow it to take available space */
+            min-width: 200px;
+            margin-bottom: 0; /* Remove default margin */
+        }
+        .table-controls label {
+             margin-bottom: 0;
+             margin-right: 0.5rem;
+        }
+
+        /* Analytics Chart Container */
+        .chart-container {
+             width: 100%;
+             max-width: 600px; /* Limit chart size */
+             margin: 2rem auto;
+             position: relative; /* Needed for Chart.js responsiveness */
+             height: 40vh; /* Example height */
+        }
+
+        /* Feedback Form */
+        #feedback-form textarea {
+            min-height: 150px;
+        }
+
+        /* Alerts/Notifications */
+        .alert {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 5px;
+            opacity: 1;
+            transition: opacity 0.5s ease-out;
+            display: none; /* Hidden by default */
+        }
+        .alert.show {
+            display: block;
+        }
+        .alert-success {
+            background-color: var(--success-color);
+            color: var(--light-text);
+            border: 1px solid #1a746a;
+        }
+        .alert-error {
+            background-color: var(--error-color);
+            color: var(--light-text);
+            border: 1px solid #d00000;
+        }
+        .alert-info {
+            background-color: var(--secondary-color);
+            color: var(--light-text);
+            border: 1px solid var(--primary-color);
+        }
+        .alert .close-btn {
+            float: right;
+            cursor: pointer;
+            font-weight: bold;
+            margin-left: 1rem;
+            line-height: 1;
+        }
+
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            nav ul {
+                justify-content: space-around; /* Better spacing on mobile */
+            }
+            nav ul li a {
+                padding: 0.4rem 0.6rem; /* Smaller padding */
+                font-size: 0.9rem;
+            }
+            main {
+                padding: 1rem;
+                margin: 0.5rem;
+            }
+            .table-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+             .table-controls input[type="search"], .table-controls select {
+                 width: 100%;
+             }
+            h1 { font-size: 1.8rem; }
+            h2 { font-size: 1.5rem; }
+            .chart-container {
+                 height: 50vh; /* Adjust height for mobile */
+            }
+        }
+
+        /* Utility Classes */
+        .hidden { display: none; }
+        .d-flex { display: flex; }
+        .justify-between { justify-content: space-between; }
+        .align-center { align-items: center; }
+        .mt-1 { margin-top: 1rem; }
+        .mb-1 { margin-bottom: 1rem; }
+        .text-center { text-align: center; }
+
+    </style>
+</head>
+<body>
+    <div id="bg-canvas"></div> <!-- Background Canvas -->
+
+    <div id="app">
+        <header>
+            <nav>
+                <ul>
+                    <li><a href="#home" class="nav-link active" data-page="home">Home / Lead Entry</a></li>
+                    <li><a href="#export" class="nav-link" data-page="export">Export Leads</a></li>
+                    <li><a href="#email" class="nav-link" data-page="email">Generate Email</a></li>
+                    <li><a href="#analytics" class="nav-link" data-page="analytics">Analytics</a></li>
+                    <li><a href="#settings" class="nav-link" data-page="settings">Settings & Feedback</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <main>
+            <div id="alert-container"></div> <!-- For displaying messages -->
+
+            <!-- Home / Lead Entry Page -->
+            <section id="home" class="page active">
+                <h1>Lead Entry & Dashboard</h1>
+                <p>Enter new lead details from Sea Asia 2025 or upload a business card.</p>
+
+                <div class="form-group">
+                     <h2 class="mt-1">Add New Lead</h2>
+                     <form id="lead-form">
+                        <input type="hidden" id="lead-id"> <!-- For editing leads -->
+                        <div class="form-group">
+                            <label for="name">Name:</label>
+                            <input type="text" id="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="position">Position:</label>
+                            <input type="text" id="position">
+                        </div>
+                        <div class="form-group">
+                            <label for="company">Company:</label>
+                            <input type="text" id="company" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="contact-number">Contact Number:</label>
+                            <input type="tel" id="contact-number">
+                        </div>
+                         <div class="form-group">
+                            <label for="email-address">Email:</label>
+                            <input type="email" id="email-address">
+                        </div>
+                        <div class="form-group">
+                            <label for="website">Website:</label>
+                            <input type="text" id="website" placeholder="https://example.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="location">Location:</label>
+                            <input type="text" id="location">
+                        </div>
+                        <div class="form-group">
+                            <label for="product-needs">Potential Product Needs:</label>
+                            <textarea id="product-needs"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="lead-type">Lead Type:</label>
+                            <select id="lead-type" required>
+                                <option value="Warm">Warm</option>
+                                <option value="Hot">Hot</option>
+                                <option value="Cold">Cold</option>
+                            </select>
+                        </div>
+                         <div class="form-group">
+                            <label for="business-card">Upload Business Card (Optional):</label>
+                            <input type="file" id="business-card" accept="image/*">
+                            <button type="button" id="process-card-btn" class="mt-1">Extract Info (OCR & AI)</button>
+                            <small class="d-block mt-1">Uses OCR and DeepSeek to suggest fields. Requires internet connection for first use.</small>
+                         </div>
+                        <div class="form-actions">
+                            <button type="submit" class="success">Save Lead</button>
+                            <button type="button" id="clear-form-btn">Clear Form</button>
+                        </div>
+                    </form>
+                </div>
+
+                <hr class="mb-1 mt-1">
+
+                <h2 class="mt-1">Lead Dashboard</h2>
+                <div class="table-controls">
+                     <label for="search-leads">Search:</label>
+                     <input type="search" id="search-leads" placeholder="Search leads...">
+                     <label for="filter-lead-type">Filter by Type:</label>
+                     <select id="filter-lead-type">
+                         <option value="">All Types</option>
+                         <option value="Hot">Hot</option>
+                         <option value="Warm">Warm</option>
+                         <option value="Cold">Cold</option>
+                     </select>
+                </div>
+                <div class="table-container">
+                    <table id="leads-table">
+                        <thead>
+                            <tr>
+                                <th data-sort="name">Name</th>
+                                <th data-sort="position">Position</th>
+                                <th data-sort="company">Company</th>
+                                <th data-sort="contact-number">Contact</th>
+                                <th data-sort="email-address">Email</th>
+                                <th data-sort="website">Website</th>
+                                <th data-sort="location">Location</th>
+                                <th data-sort="product-needs">Needs</th>
+                                <th data-sort="leadType">Lead Type</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leads-tbody">
+                            <!-- Lead rows will be dynamically inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+                 <p id="no-leads-message" class="text-center mt-1 hidden">No leads found.</p>
+            </section>
+
+            <!-- Export Page -->
+            <section id="export" class="page">
+                <h1>Export Leads</h1>
+                <p>Download your leads as an Excel (XLSX) or CSV file.</p>
+
+                <div class="form-group">
+                     <label for="export-format">Select Format:</label>
+                     <select id="export-format">
+                         <option value="xlsx">Excel (.xlsx)</option>
+                         <option value="csv">CSV (.csv)</option>
+                     </select>
+                 </div>
+
+                 <div class="form-group">
+                    <label>Export Options:</label><br>
+                    <input type="radio" name="export-option" id="export-all" value="all" checked>
+                    <label for="export-all" style="display: inline-block; margin-right: 1rem;">Export All Leads</label>
+                    <input type="radio" name="export-option" id="export-filtered" value="filtered">
+                    <label for="export-filtered" style="display: inline-block;">Export Current Filtered/Sorted View</label>
+                 </div>
+
+                 <button id="export-btn" class="success">Download Export File</button>
+                 <p class="mt-1"><small>Note: Color coding based on lead type in the exported file is a premium feature or requires advanced setup not fully implemented here.</small></p>
+
+                 <h3 class="mt-1">Export History (Placeholder)</h3>
+                 <ul id="export-history">
+                     <li>No export history yet.</li>
+                     <!-- History items could be added here -->
+                 </ul>
+            </section>
+
+            <!-- Email Generation Page -->
+            <section id="email" class="page">
+                <h1>Generate Follow-Up Email</h1>
+                <p>Select a lead and use DeepSeek AI to generate a personalized follow-up email.</p>
+
+                 <div class="form-group">
+                     <label for="select-lead-email">Select Lead:</label>
+                     <select id="select-lead-email" required>
+                         <option value="">-- Select a Lead --</option>
+                         <!-- Options populated dynamically -->
+                     </select>
+                 </div>
+
+                 <button id="generate-email-btn">Generate Email Content (AI)</button>
+                 <small id="ai-status" class="d-block mb-1"></small>
+
+                <div id="email-composer" class="mt-1 hidden">
+                    <h3 class="mt-1">Generated Email:</h3>
+                     <div class="form-group">
+                         <label for="email-subject">Subject:</label>
+                         <input type="text" id="email-subject" placeholder="Generated Subject Line">
+                     </div>
+                      <div class="form-group">
+                         <label for="email-body">Body:</label>
+                         <textarea id="email-body" placeholder="Generated Email Body"></textarea>
+                     </div>
+                     <div class="form-actions">
+                         <button id="copy-email-btn">Copy to Clipboard</button>
+                         <button id="send-email-btn">Open in Email Client</button> <!-- Uses mailto: -->
+                     </div>
+                 </div>
+            </section>
+
+            <!-- Analytics & Progress Page -->
+            <section id="analytics" class="page">
+                <h1>Analytics & Progress</h1>
+                <p>Visualize your lead generation progress and gain insights.</p>
+
+                <div class="d-flex justify-between flex-wrap mb-1" id="stats-summary">
+                    <div><strong>Total Leads:</strong> <span id="total-leads-stat">0</span></div>
+                    <div><strong>Hot Leads:</strong> <span id="hot-leads-stat">0</span></div>
+                    <div><strong>Warm Leads:</strong> <span id="warm-leads-stat">0</span></div>
+                    <div><strong>Cold Leads:</strong> <span id="cold-leads-stat">0</span></div>
+                    <!-- Add more stats like conversion rate if tracked -->
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="lead-type-chart"></canvas>
+                </div>
+                <p class="text-center">Lead Distribution by Type</p>
+
+                <div class="chart-container">
+                     <canvas id="lead-trend-chart"></canvas> <!-- Placeholder for trend chart -->
+                 </div>
+                <p class="text-center">Lead Acquisition Trend</p>
+
+                <h3 class="mt-1">Deep Insights (Placeholder)</h3>
+                <p>Future integration: Use DeepSeek API for sentiment analysis of lead notes or identify patterns for follow-up optimization.</p>
+                <div id="deep-insights-content">
+                    <!-- AI-generated suggestions could appear here -->
+                </div>
+                 <button id="analyze-insights-btn" class="hidden">Get AI Insights</button> <!-- Hidden until implemented -->
+
+            </section>
+
+            <!-- Settings & Feedback Page -->
+            <section id="settings" class="page">
+                <h1>Settings & Feedback</h1>
+
+                <h2 class="mt-1">App Settings</h2>
+                <form id="settings-form">
+                    <div class="form-group">
+                        <label for="ui-theme">UI Theme:</label>
+                        <select id="ui-theme">
+                            <option value="default">Default</option>
+                            <option value="dark">Dark (Not Implemented)</option>
+                            <option value="ocean">Ocean (Not Implemented)</option>
+                        </select>
+                    </div>
+                     <div class="form-group">
+                        <label>Notifications:</label><br>
+                        <input type="checkbox" id="notify-hot-lead" checked>
+                        <label for="notify-hot-lead" style="display: inline-block; margin-right: 1rem;">Alert for New Hot Leads (UI Alert)</label><br>
+                        <input type="checkbox" id="notify-followup" disabled>
+                        <label for="notify-followup" style="display: inline-block;">Reminders for Follow-ups (Not Implemented)</label>
+                    </div>
+                     <div class="form-group">
+                         <label for="default-export">Default Export Format:</label>
+                         <select id="default-export">
+                             <option value="xlsx">Excel (.xlsx)</option>
+                             <option value="csv">CSV (.csv)</option>
+                         </select>
+                     </div>
+                     <button type="submit" class="success">Save Settings</button>
+                </form>
+
+                 <hr class="mb-1 mt-1">
+
+                 <h2 class="mt-1">Submit Feedback</h2>
+                 <form id="feedback-form">
+                     <div class="form-group">
+                        <label for="feedback-type">Feedback Type:</label>
+                        <select id="feedback-type">
+                            <option value="suggestion">Suggestion</option>
+                            <option value="bug">Bug Report</option>
+                            <option value="general">General Feedback</option>
+                        </select>
+                    </div>
+                     <div class="form-group">
+                         <label for="feedback-message">Your Message:</label>
+                         <textarea id="feedback-message" required></textarea>
+                     </div>
+                     <button type="submit">Send Feedback (via Email)</button>
+                 </form>
+            </section>
+
+        </main>
+
+        <footer style="text-align: center; padding: 1rem; background-color: var(--primary-color); color: var(--light-text); margin-top: auto;">
+            <p>&copy; 2024 Your Company - Sea Asia 2025 Lead Management Tool</p>
+             <p style="font-size: 0.8em; color: #ffc107;"><strong>Security Warning:</strong> API keys are exposed in client-side code. Use a backend proxy for production.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Constants & State ---
+            const DEEPSEEK_API_KEY = 'sk-33a3d7fd1d6f4d2bbed2ea1d1d5d9d37'; // !!! INSECURE - DO NOT USE IN PRODUCTION !!!
+            const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions'; // Replace with actual endpoint if different
+
+            let state = {
+                leads: [],
+                settings: {
+                    theme: 'default',
+                    notifyHotLead: true,
+                    notifyFollowup: false,
+                    defaultExportFormat: 'xlsx'
+                },
+                currentPage: 'home',
+                sortColumn: null,
+                sortDirection: 'asc' // 'asc' or 'desc'
+            };
+
+            // --- DOM Elements ---
+            const pages = document.querySelectorAll('.page');
+            const navLinks = document.querySelectorAll('.nav-link');
+            const leadForm = document.getElementById('lead-form');
+            const leadsTableBody = document.getElementById('leads-tbody');
+            const searchInput = document.getElementById('search-leads');
+            const filterSelect = document.getElementById('filter-lead-type');
+            const exportBtn = document.getElementById('export-btn');
+            const selectLeadEmail = document.getElementById('select-lead-email');
+            const generateEmailBtn = document.getElementById('generate-email-btn');
+            const emailComposer = document.getElementById('email-composer');
+            const emailSubjectInput = document.getElementById('email-subject');
+            const emailBodyInput = document.getElementById('email-body');
+            const copyEmailBtn = document.getElementById('copy-email-btn');
+            const sendEmailBtn = document.getElementById('send-email-btn');
+            const settingsForm = document.getElementById('settings-form');
+            const feedbackForm = document.getElementById('feedback-form');
+            const alertContainer = document.getElementById('alert-container');
+            const processCardBtn = document.getElementById('process-card-btn');
+            const businessCardInput = document.getElementById('business-card');
+            const leadsTable = document.getElementById('leads-table');
+            const noLeadsMessage = document.getElementById('no-leads-message');
+            const aiStatus = document.getElementById('ai-status');
+            const clearFormBtn = document.getElementById('clear-form-btn');
+            const exportFormatSelect = document.getElementById('export-format');
+            const exportOptionRadios = document.querySelectorAll('input[name="export-option"]');
+            // Analytics Elements
+            const totalLeadsStat = document.getElementById('total-leads-stat');
+            const hotLeadsStat = document.getElementById('hot-leads-stat');
+            const warmLeadsStat = document.getElementById('warm-leads-stat');
+            const coldLeadsStat = document.getElementById('cold-leads-stat');
+            const leadTypeChartCtx = document.getElementById('lead-type-chart')?.getContext('2d');
+            const leadTrendChartCtx = document.getElementById('lead-trend-chart')?.getContext('2d');
+            let leadTypeChartInstance = null;
+            let leadTrendChartInstance = null; // For trend chart
+
+
+            // --- State Management ---
+            function saveState() {
+                try {
+                    localStorage.setItem('leadAppState', JSON.stringify(state));
+                } catch (e) {
+                    console.error("Error saving state to localStorage:", e);
+                    displayAlert('Error saving data. LocalStorage might be full.', 'error');
+                }
+            }
+
+            function loadState() {
+                const savedState = localStorage.getItem('leadAppState');
+                if (savedState) {
+                    try {
+                        state = JSON.parse(savedState);
+                        // Ensure leads is always an array
+                        if (!Array.isArray(state.leads)) {
+                            state.leads = [];
+                        }
+                        // Apply settings on load
+                        applySettings();
+                    } catch (e) {
+                        console.error("Error loading state from localStorage:", e);
+                        state = { leads: [], settings: { theme: 'default', notifyHotLead: true, notifyFollowup: false, defaultExportFormat: 'xlsx' }, currentPage: 'home', sortColumn: null, sortDirection: 'asc' }; // Reset to default
+                    }
+                }
+            }
+
+            // --- Navigation ---
+            function showPage(pageId) {
+                pages.forEach(page => page.classList.remove('active'));
+                navLinks.forEach(link => link.classList.remove('active'));
+
+                const activePage = document.getElementById(pageId);
+                const activeLink = document.querySelector(`.nav-link[data-page="${pageId}"]`);
+
+                if (activePage) activePage.classList.add('active');
+                if (activeLink) activeLink.classList.add('active');
+                state.currentPage = pageId;
+
+                 // Trigger actions needed when a page loads
+                 if (pageId === 'home') {
+                     renderLeadsTable();
+                 } else if (pageId === 'email') {
+                    populateLeadSelect();
+                    emailComposer.classList.add('hidden'); // Hide composer initially
+                 } else if (pageId === 'analytics') {
+                     updateAnalytics();
+                 } else if (pageId === 'settings') {
+                     loadSettingsForm();
+                 } else if (pageId === 'export') {
+                     loadExportSettings();
+                 }
+            }
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const pageId = link.getAttribute('data-page');
+                    window.location.hash = pageId; // Update hash for SPA behavior
+                });
+            });
+
+            // Handle hash changes (back/forward buttons, direct URL)
+            window.addEventListener('hashchange', () => {
+                const pageId = window.location.hash.substring(1) || 'home';
+                showPage(pageId);
+            });
+
+            // Initial page load based on hash or default
+            const initialPageId = window.location.hash.substring(1) || 'home';
+
+
+            // --- Lead Management ---
+            function addLead(leadData) {
+                 const newLead = {
+                     id: Date.now().toString(), // Simple unique ID
+                     createdAt: new Date().toISOString(), // Add creation timestamp
+                     ...leadData
+                 };
+                 state.leads.push(newLead);
+                 if (newLead.leadType === 'Hot' && state.settings.notifyHotLead) {
+                     displayAlert(`New Hot Lead added: ${newLead.name} from ${newLead.company}`, 'success', 5000);
+                 }
+                 saveState();
+                 renderLeadsTable(); // Update table immediately
+                 if (state.currentPage === 'analytics') updateAnalytics(); // Update stats if on analytics page
+                 return newLead;
+            }
+
+            function updateLead(leadId, updatedData) {
+                const index = state.leads.findIndex(lead => lead.id === leadId);
+                if (index !== -1) {
+                    state.leads[index] = { ...state.leads[index], ...updatedData };
+                    saveState();
+                    renderLeadsTable();
+                    if (state.currentPage === 'analytics') updateAnalytics(); // Update stats if on analytics page
+                    return true;
+                }
+                return false;
+            }
+
+             function deleteLead(leadId) {
+                 state.leads = state.leads.filter(lead => lead.id !== leadId);
+                 saveState();
+                 renderLeadsTable();
+                 // Also update dependent elements if needed
+                 if (state.currentPage === 'email') populateLeadSelect();
+                 if (state.currentPage === 'analytics') updateAnalytics();
+             }
+
+             function getLeadById(leadId) {
+                 return state.leads.find(lead => lead.id === leadId);
+             }
+
+             function getFilteredAndSortedLeads() {
+                let filteredLeads = [...state.leads];
+
+                // Apply search filter
+                const searchTerm = searchInput.value.toLowerCase();
+                if (searchTerm) {
+                    filteredLeads = filteredLeads.filter(lead =>
+                        Object.values(lead).some(value =>
+                            String(value).toLowerCase().includes(searchTerm)
+                        )
+                    );
+                }
+
+                // Apply lead type filter
+                const filterType = filterSelect.value;
+                if (filterType) {
+                    filteredLeads = filteredLeads.filter(lead => lead.leadType === filterType);
+                }
+
+                // Apply sorting
+                if (state.sortColumn) {
+                    filteredLeads.sort((a, b) => {
+                        // Handle potential null/undefined values during sort
+                        const valA = String(a[state.sortColumn] === null || a[state.sortColumn] === undefined ? '' : a[state.sortColumn]).toLowerCase();
+                        const valB = String(b[state.sortColumn] === null || b[state.sortColumn] === undefined ? '' : b[state.sortColumn]).toLowerCase();
+
+                        if (valA < valB) return state.sortDirection === 'asc' ? -1 : 1;
+                        if (valA > valB) return state.sortDirection === 'asc' ? 1 : -1;
+                        return 0;
+                    });
+                } else {
+                     // Default sort by creation date (newest first) if no column is selected
+                     filteredLeads.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                }
+
+
+                return filteredLeads;
+            }
+
+             function renderLeadsTable() {
+                const displayLeads = getFilteredAndSortedLeads();
+                leadsTableBody.innerHTML = ''; // Clear existing rows
+
+                if (displayLeads.length === 0) {
+                    noLeadsMessage.classList.remove('hidden');
+                    leadsTable.classList.add('hidden');
+                } else {
+                     noLeadsMessage.classList.add('hidden');
+                     leadsTable.classList.remove('hidden');
+                     displayLeads.forEach(lead => {
+                        const row = leadsTableBody.insertRow();
+                        row.innerHTML = `
+                            <td>${lead.name || ''}</td>
+                            <td>${lead.position || ''}</td>
+                            <td>${lead.company || ''}</td>
+                            <td>${lead.contactNumber || ''}</td>
+                            <td>${lead.emailAddress ? `<a href="mailto:${lead.emailAddress}">${lead.emailAddress}</a>` : ''}</td>
+                            <td>${lead.website ? `<a href="${lead.website.startsWith('http') ? lead.website : 'https://' + lead.website}" target="_blank" rel="noopener noreferrer">${lead.website}</a>` : ''}</td>
+                            <td>${lead.location || ''}</td>
+                            <td title="${lead.productNeeds || ''}">${(lead.productNeeds || '').substring(0, 50)}${ (lead.productNeeds || '').length > 50 ? '...' : ''}</td>
+                            <td><span class="lead-tag lead-tag-${lead.leadType.toLowerCase()}">${lead.leadType}</span></td>
+                            <td>
+                                <button class="edit-btn" data-id="${lead.id}" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; margin-right: 5px;">Edit</button>
+                                <button class="delete-btn danger" data-id="${lead.id}" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">Delete</button>
+                            </td>
+                        `;
+                    });
+                }
+
+                // Add event listeners for edit/delete buttons (use event delegation)
+                leadsTableBody.removeEventListener('click', handleTableActions); // Remove previous listener to avoid duplicates
+                leadsTableBody.addEventListener('click', handleTableActions);
+            }
+
+             // Consolidated handler for table button clicks using event delegation
+             function handleTableActions(event) {
+                const target = event.target;
+                if (target.classList.contains('edit-btn')) {
+                    handleEditLead(target.dataset.id);
+                } else if (target.classList.contains('delete-btn')) {
+                    handleDeleteLead(target.dataset.id);
+                }
+             }
+
+             function handleEditLead(leadId) {
+                 const lead = getLeadById(leadId);
+                 if (lead) {
+                     populateLeadForm(lead);
+                 }
+             }
+
+             function handleDeleteLead(leadId) {
+                 const lead = getLeadById(leadId);
+                 if (lead && confirm(`Are you sure you want to delete the lead for ${lead.name}?`)) {
+                     deleteLead(leadId);
+                     displayAlert('Lead deleted.', 'success');
+                 }
+             }
+
+
+            // --- Form Handling ---
+            leadForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const leadId = document.getElementById('lead-id').value;
+                const leadData = {
+                    name: document.getElementById('name').value.trim(),
+                    position: document.getElementById('position').value.trim(),
+                    company: document.getElementById('company').value.trim(),
+                    contactNumber: document.getElementById('contact-number').value.trim(),
+                    emailAddress: document.getElementById('email-address').value.trim(),
+                    website: document.getElementById('website').value.trim(),
+                    location: document.getElementById('location').value.trim(),
+                    productNeeds: document.getElementById('product-needs').value.trim(),
+                    leadType: document.getElementById('lead-type').value
+                };
+
+                 // Basic validation
+                 if (!leadData.name || !leadData.company) {
+                     displayAlert('Name and Company are required.', 'error');
+                     return;
+                 }
+
+                 if (leadId) { // Editing existing lead
+                     if (updateLead(leadId, leadData)) {
+                        displayAlert('Lead updated successfully!', 'success');
+                     } else {
+                         displayAlert('Error updating lead.', 'error');
+                     }
+                 } else { // Adding new lead
+                     addLead(leadData);
+                     displayAlert('Lead added successfully!', 'success');
+                 }
+
+                clearLeadForm();
+            });
+
+             clearFormBtn.addEventListener('click', clearLeadForm);
+
+             function clearLeadForm() {
+                 leadForm.reset();
+                 document.getElementById('lead-id').value = ''; // Clear hidden ID field
+                 businessCardInput.value = ''; // Clear file input
+             }
+
+             function populateLeadForm(lead) {
+                 document.getElementById('lead-id').value = lead.id;
+                 document.getElementById('name').value = lead.name || '';
+                 document.getElementById('position').value = lead.position || '';
+                 document.getElementById('company').value = lead.company || '';
+                 document.getElementById('contact-number').value = lead.contactNumber || '';
+                 document.getElementById('email-address').value = lead.emailAddress || '';
+                 document.getElementById('website').value = lead.website || '';
+                 document.getElementById('location').value = lead.location || '';
+                 document.getElementById('product-needs').value = lead.productNeeds || '';
+                 document.getElementById('lead-type').value = lead.leadType || 'Warm';
+                 // Scroll to form for easy editing
+                 leadForm.scrollIntoView({ behavior: 'smooth' });
+             }
+
+            // --- Table Filtering & Sorting ---
+            searchInput.addEventListener('input', renderLeadsTable);
+            filterSelect.addEventListener('change', renderLeadsTable);
+
+            leadsTable.querySelector('thead').addEventListener('click', (e) => {
+                if (e.target.tagName === 'TH' && e.target.dataset.sort) {
+                    const column = e.target.dataset.sort;
+                    if (state.sortColumn === column) {
+                        state.sortDirection = state.sortDirection === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        state.sortColumn = column;
+                        state.sortDirection = 'asc';
+                    }
+                    // Remove sorting indicators from other columns
+                    leadsTable.querySelectorAll('thead th').forEach(th => th.classList.remove('sort-asc', 'sort-desc'));
+                    // Add sorting indicator to current column
+                    e.target.classList.add(state.sortDirection === 'asc' ? 'sort-asc' : 'sort-desc'); // Requires CSS for ::after pseudo-elements
+
+                    renderLeadsTable(); // Re-render with new sorting
+                }
+            });
+            // Add CSS for sorting indicators (optional)
+            const styleSheet = document.createElement("style");
+            styleSheet.innerText = `
+                th[data-sort]::after { content: ''; display: inline-block; width: 0; height: 0; margin-left: 5px; opacity: 0.4; }
+                th[data-sort].sort-asc::after { border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 5px solid currentColor; opacity: 1; }
+                th[data-sort].sort-desc::after { border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 5px solid currentColor; opacity: 1; }
+            `;
+            document.head.appendChild(styleSheet);
+
+            // --- OCR & DeepSeek Integration (Lead Entry) ---
+            processCardBtn.addEventListener('click', async () => {
+                const file = businessCardInput.files[0];
+                if (!file) {
+                    displayAlert('Please select an image file first.', 'info');
+                    return;
+                }
+
+                // Check if Tesseract is loaded
+                 if (typeof Tesseract === 'undefined') {
+                     displayAlert('OCR Library (Tesseract.js) is not loaded. Please check your internet connection and refresh.', 'error');
+                     return;
+                 }
+
+                displayAlert('Processing business card... Step 1: OCR', 'info');
+                processCardBtn.disabled = true;
+                processCardBtn.textContent = 'Processing... (OCR)';
+
+                try {
+                    // 1. OCR Step
+                    const ocrText = await performOCR(file); // Now uses the enabled library
+                    if (!ocrText || ocrText.trim().length < 5) { // Add a basic check for empty/short OCR result
+                         throw new Error("OCR failed to extract sufficient text. Image quality might be low.");
+                    }
+                    displayAlert('OCR successful. Step 2: Extracting Info with AI...', 'info');
+                     processCardBtn.textContent = 'Processing... (AI)';
+
+
+                    // 2. DeepSeek API Call for Extraction
+                    const prompt = `Extract the following details accurately from this business card text. Be precise. If a detail isn't clearly present, return null or an empty string "" for that field. Output ONLY a valid JSON object with these keys: "name", "position", "company", "contactNumber", "emailAddress", "website", "location". Text:\n\n${ocrText}`;
+
+                    const extractedData = await callDeepSeekAPI(prompt, true); // true indicates we expect JSON
+
+                    if (extractedData && typeof extractedData === 'object') {
+                        // 3. Populate Form Fields (only if data exists in response)
+                        if (extractedData.name) document.getElementById('name').value = extractedData.name;
+                        if (extractedData.position) document.getElementById('position').value = extractedData.position;
+                        if (extractedData.company) document.getElementById('company').value = extractedData.company;
+                        if (extractedData.contactNumber) document.getElementById('contact-number').value = extractedData.contactNumber;
+                        if (extractedData.emailAddress) document.getElementById('email-address').value = extractedData.emailAddress;
+                        if (extractedData.website) document.getElementById('website').value = extractedData.website;
+                        if (extractedData.location) document.getElementById('location').value = extractedData.location;
+                        displayAlert('Information extracted and relevant fields populated.', 'success');
+                    } else {
+                         console.warn("AI response was not a valid object or empty:", extractedData)
+                        displayAlert('AI could not extract structured data or returned an unexpected format. Please verify or enter manually.', 'error');
+                    }
+
+                } catch (error) {
+                    console.error("Error processing business card:", error);
+                    displayAlert(`Error: ${error.message}`, 'error');
+                } finally {
+                    processCardBtn.disabled = false;
+                    processCardBtn.textContent = 'Extract Info (OCR & AI)';
+                }
+            });
+
+             // Actual OCR function using Tesseract.js
+             async function performOCR(file) {
+                 return new Promise(async (resolve, reject) => {
+                    if (typeof Tesseract === 'undefined') {
+                        reject(new Error("OCR Library (Tesseract.js) not available."));
+                        return;
+                    }
+                    try {
+                        displayAlert('Initializing OCR Engine... (May download language data)', 'info');
+                        // Log progress updates
+                        const worker = await Tesseract.createWorker('eng', 1, { // 'eng' for English, 1 for default OEM
+                             logger: m => {
+                                 console.log('OCR Progress:', m);
+                                 if (m.status === 'recognizing text') {
+                                     displayAlert(`OCR Progress: ${Math.round(m.progress * 100)}%`, 'info', 0); // 0 duration = sticky
+                                 }
+                             }
+                         });
+                        displayAlert('Recognizing text from image...', 'info', 0); // Sticky message
+                        const { data: { text } } = await worker.recognize(file);
+                        console.log("OCR Result:", text);
+                        await worker.terminate();
+                        resolve(text);
+                    } catch (err) {
+                        console.error("OCR Error:", err);
+                        reject(new Error(`OCR processing failed: ${err.message || err}`));
+                    } finally {
+                        // Clear sticky progress/status messages
+                        const stickyAlerts = alertContainer.querySelectorAll('.alert-info');
+                         stickyAlerts.forEach(alert => {
+                             if (alert.textContent.includes('OCR Progress') || alert.textContent.includes('Recognizing text') || alert.textContent.includes('Initializing OCR')) {
+                                 alert.style.opacity = '0';
+                                 setTimeout(() => alert.remove(), 500);
+                             }
+                         });
+                    }
+                });
+             }
+
+            // --- DeepSeek API Call Function ---
+            async function callDeepSeekAPI(promptContent, expectJson = false) {
+                console.warn("!!! Calling DeepSeek API with key exposed in client-side code. THIS IS INSECURE !!!");
+                aiStatus.textContent = 'Communicating with AI...';
+                aiStatus.style.color = 'orange';
+
+                try {
+                    const response = await fetch(DEEPSEEK_API_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
+                        },
+                        body: JSON.stringify({
+                            model: "deepseek-chat", // Or appropriate model
+                            messages: [
+                                { "role": "system", "content": "You are an assistant that processes text and responds accurately based on the user's request. If asked for JSON, provide ONLY valid JSON." },
+                                { "role": "user", "content": promptContent }
+                            ],
+                            temperature: 0.2 // Lower temperature for more deterministic extraction
+                            // max_tokens: 500,
+                        })
+                    });
+
+                    if (!response.ok) {
+                        // Try to get more specific error from DeepSeek response body
+                        let errorMsg = response.statusText;
+                        try {
+                            const errorData = await response.json();
+                            errorMsg = errorData.error?.message || errorMsg;
+                        } catch (e) { /* Ignore if body isn't JSON */ }
+                        throw new Error(`API Error (${response.status}): ${errorMsg}`);
+                    }
+
+                    const data = await response.json();
+
+                    // Check for API-level errors within the successful response structure
+                    if (data.error) {
+                         throw new Error(`API Returned Error: ${data.error.message}`);
+                    }
+                    if (!data.choices || data.choices.length === 0 || !data.choices[0].message || !data.choices[0].message.content) {
+                        throw new Error("API response structure was unexpected or empty.");
+                    }
+
+                    const resultText = data.choices[0].message.content.trim();
+
+                    aiStatus.textContent = 'AI response received.';
+                    aiStatus.style.color = 'green';
+                    setTimeout(() => { aiStatus.textContent = ''; }, 3000); // Clear status after a bit
+
+                    if (expectJson) {
+                        try {
+                            // Attempt to find JSON block, even with surrounding text/markdown
+                            const jsonMatch = resultText.match(/```json\s*([\s\S]*?)\s*```|({[\s\S]*})/);
+                             if (jsonMatch) {
+                                 const jsonString = jsonMatch[1] || jsonMatch[2];
+                                 return JSON.parse(jsonString);
+                             } else {
+                                 // Assume the entire response *should* be JSON if no markdown found
+                                 return JSON.parse(resultText);
+                             }
+                        } catch (parseError) {
+                             console.error("Failed to parse JSON response from AI:", parseError, "Raw response:", resultText);
+                             // Return the raw text in case it's useful for debugging, but flag it as an error upstream
+                             throw new Error("AI response was not valid JSON format.");
+                        }
+                    } else {
+                        return resultText; // Return plain text
+                    }
+
+                } catch (error) {
+                    console.error('DeepSeek API Call Failed:', error);
+                    aiStatus.textContent = `AI Error: ${error.message}`;
+                    aiStatus.style.color = 'red';
+                    // Don't clear error status immediately
+                    return null; // Indicate failure
+                }
+            }
+
+
+            // --- Export Functionality ---
+            exportBtn.addEventListener('click', () => {
+                 const format = exportFormatSelect.value;
+                 const selectedExportOption = document.querySelector('input[name="export-option"]:checked').value;
+                 const dataToExport = selectedExportOption === 'all' ? state.leads : getFilteredAndSortedLeads(); // Use all or filtered leads
+
+                 if (dataToExport.length === 0) {
+                     displayAlert('No leads to export.', 'info');
+                     return;
+                 }
+
+                displayAlert(`Exporting ${dataToExport.length} leads as ${format.toUpperCase()}...`, 'info');
+
+                // Prepare data for SheetJS
+                const worksheetData = [
+                    // Header row matches table order for consistency
+                    ["Name", "Position", "Company", "Contact Number", "Email", "Website", "Location", "Potential Product Needs", "Lead Type", "Created At"] // Added Created At
+                ];
+
+                dataToExport.forEach(lead => {
+                    worksheetData.push([
+                        lead.name || '',
+                        lead.position || '',
+                        lead.company || '',
+                        lead.contactNumber || '',
+                        lead.emailAddress || '',
+                        lead.website || '',
+                        lead.location || '',
+                        lead.productNeeds || '',
+                        lead.leadType || '',
+                        lead.createdAt ? new Date(lead.createdAt).toLocaleString() : '' // Format date
+                    ]);
+                });
+
+                try {
+                    const ws = XLSX.utils.aoa_to_sheet(worksheetData);
+
+                    // Optional: Add basic column width hints (adjust as needed)
+                     ws['!cols'] = [
+                         { wch: 20 }, // Name
+                         { wch: 20 }, // Position
+                         { wch: 25 }, // Company
+                         { wch: 18 }, // Contact Number
+                         { wch: 25 }, // Email
+                         { wch: 30 }, // Website
+                         { wch: 20 }, // Location
+                         { wch: 40 }, // Needs
+                         { wch: 10 }, // Lead Type
+                         { wch: 20 }  // Created At
+                     ];
+
+                    const wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, "Sea Asia Leads");
+
+                    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                    const filename = `sea_asia_leads_${timestamp}.${format}`;
+
+                    // Trigger download
+                    XLSX.writeFile(wb, filename);
+                    displayAlert('Export file generated successfully!', 'success');
+
+                    // Add to export history (simple implementation)
+                    const historyList = document.getElementById('export-history');
+                     if (historyList.firstElementChild && historyList.firstElementChild.textContent.includes('No export')) {
+                         historyList.innerHTML = ''; // Clear placeholder
+                     }
+                     const li = document.createElement('li');
+                     li.textContent = `Exported ${filename} (${dataToExport.length} leads) on ${new Date().toLocaleString()}`;
+                     historyList.prepend(li); // Add to top
+
+
+                } catch (error) {
+                     console.error("Error generating export file:", error);
+                     displayAlert('Failed to generate export file.', 'error');
+                 }
+
+            });
+
+             function loadExportSettings() {
+                 exportFormatSelect.value = state.settings.defaultExportFormat || 'xlsx';
+             }
+
+            // --- Email Generation ---
+            function populateLeadSelect() {
+                selectLeadEmail.innerHTML = '<option value="">-- Select a Lead --</option>'; // Reset
+                // Sort leads alphabetically for the dropdown
+                const sortedLeads = [...state.leads].sort((a,b) => (a.name || '').localeCompare(b.name || ''));
+                sortedLeads.forEach(lead => {
+                    const option = document.createElement('option');
+                    option.value = lead.id;
+                    option.textContent = `${lead.name} (${lead.company})`;
+                    selectLeadEmail.appendChild(option);
+                });
+            }
+
+            generateEmailBtn.addEventListener('click', async () => {
+                const selectedLeadId = selectLeadEmail.value;
+                if (!selectedLeadId) {
+                    displayAlert('Please select a lead first.', 'info');
+                    return;
+                }
+
+                const lead = getLeadById(selectedLeadId);
+                if (!lead) {
+                    displayAlert('Selected lead not found.', 'error');
+                    return;
+                }
+
+                 generateEmailBtn.disabled = true;
+                 generateEmailBtn.textContent = 'Generating...';
+                 emailComposer.classList.add('hidden'); // Hide old content
+
+                // Construct prompt for DeepSeek
+                 // Make the placeholder more specific if you can
+                 const yourCompanyName = "Our Company"; // REPLACE with your actual company name
+                 const yourOfferings = "advanced maritime solutions, logistics software, and vessel technology"; // REPLACE or refine
+                 const prompt = `Generate a personalized and persuasive follow-up email for a lead met at Sea Asia 2025.
+                 From: ${yourCompanyName}
+                 To: ${lead.name || 'Valued Contact'} (${lead.position || 'Representative'} at ${lead.company})
+                 Context: Met at Sea Asia 2025.
+                 Lead's Potential Needs/Notes: ${lead.productNeeds || 'Discussed general maritime industry topics.'}
+
+                 The email should:
+                 1. Have a compelling and specific subject line mentioning Sea Asia 2025 and ideally their company or a discussed topic. Avoid generic subjects.
+                 2. Start with a personalized greeting (use their name).
+                 3. Briefly and warmly reference meeting them at Sea Asia 2025. Mentioning the event context is key.
+                 4. Connect ${yourCompanyName}'s offerings (specifically ${yourOfferings}) to their company (${lead.company}) or their potential needs (${lead.productNeeds || 'our discussion'}). Be relevant.
+                 5. Include ONE clear call to action (e.g., "Would you be available for a brief 15-minute call next week to explore this further?", "May I send over a brochure detailing [specific solution]?", "You can find more information on our website at [Your Website]").
+                 6. Maintain a professional, concise, and helpful tone. Avoid overly salesy language.
+
+                 Output ONLY the subject line and the email body, separated by "---BODY---".
+                 Example format: Follow up: Sea Asia 2025 discussion with [Company Name]---BODY---Dear [Name],
+
+                 It was a pleasure meeting you...`;
+
+
+                 try {
+                     const rawResponse = await callDeepSeekAPI(prompt);
+                     if (rawResponse && rawResponse.includes('---BODY---')) {
+                         const parts = rawResponse.split('---BODY---');
+                         // Clean up potential leading/trailing whitespace or newlines
+                         const subject = parts[0].replace(/^Subject:\s*/i, '').trim();
+                         const body = parts[1].trim();
+
+                         emailSubjectInput.value = subject;
+                         emailBodyInput.value = body;
+                         emailComposer.classList.remove('hidden');
+                         displayAlert('Email content generated successfully.', 'success');
+                     } else {
+                         // If format is wrong, still show the raw response in the body for manual use
+                         console.warn("AI response format was incorrect. Raw response:", rawResponse);
+                         emailSubjectInput.value = "Generated Email (Check Format)";
+                         emailBodyInput.value = rawResponse || "AI failed to generate content in the expected format. Please check the console or try again.";
+                         emailComposer.classList.remove('hidden');
+                         throw new Error("AI response format was incorrect or empty.");
+                     }
+                 } catch (error) {
+                    console.error("Email generation failed:", error);
+                    displayAlert(`Failed to generate email: ${error.message}`, 'error');
+                     // Keep composer visible if it had partial content
+                 } finally {
+                     generateEmailBtn.disabled = false;
+                     generateEmailBtn.textContent = 'Generate Email Content (AI)';
+                 }
+            });
+
+             copyEmailBtn.addEventListener('click', () => {
+                 const subject = emailSubjectInput.value;
+                 const body = emailBodyInput.value;
+                 // Copy just the body for easier pasting into email clients
+                 navigator.clipboard.writeText(body)
+                     .then(() => displayAlert('Email body copied to clipboard!', 'success'))
+                     .catch(err => {
+                         console.error('Failed to copy email body:', err);
+                         displayAlert('Failed to copy email body.', 'error');
+                     });
+             });
+
+             sendEmailBtn.addEventListener('click', () => {
+                 const subject = encodeURIComponent(emailSubjectInput.value);
+                 const body = encodeURIComponent(emailBodyInput.value);
+                 const selectedLeadId = selectLeadEmail.value;
+                 const lead = getLeadById(selectedLeadId);
+                 const recipient = lead?.emailAddress ? encodeURIComponent(lead.emailAddress) : '';
+
+                 if (!recipient && !subject && !body) {
+                     displayAlert('No email content or recipient available.', 'info');
+                     return;
+                 }
+
+                  let mailtoLink = 'mailto:';
+                 if (recipient) {
+                     mailtoLink += recipient;
+                 }
+                 mailtoLink += `?subject=${subject}&body=${body}`;
+
+                 window.location.href = mailtoLink;
+                 displayAlert('Opening your default email client...', 'info');
+
+             });
+
+            // --- Analytics ---
+            function updateAnalytics() {
+                 const totalLeads = state.leads.length;
+                 const hotLeads = state.leads.filter(l => l.leadType === 'Hot').length;
+                 const warmLeads = state.leads.filter(l => l.leadType === 'Warm').length;
+                 const coldLeads = state.leads.filter(l => l.leadType === 'Cold').length;
+
+                 totalLeadsStat.textContent = totalLeads;
+                 hotLeadsStat.textContent = hotLeads;
+                 warmLeadsStat.textContent = warmLeads;
+                 coldLeadsStat.textContent = coldLeads;
+
+                 renderLeadTypeChart(hotLeads, warmLeads, coldLeads);
+                 renderLeadTrendChart(); // Call function to render trend chart
+             }
+
+             function renderLeadTypeChart(hot, warm, cold) {
+                if (!leadTypeChartCtx) {
+                     console.warn("Lead Type Chart canvas context not found.");
+                     return;
+                 }
+
+                 const data = {
+                     labels: ['Hot', 'Warm', 'Cold'],
+                     datasets: [{
+                         label: 'Lead Types',
+                         data: [hot, warm, cold],
+                         backgroundColor: [
+                             'rgba(208, 0, 0, 0.7)',    // Hot - Red
+                             'rgba(250, 163, 7, 0.7)',  // Warm - Orange
+                             'rgba(108, 117, 125, 0.7)' // Cold - Grey
+                         ],
+                         borderColor: [
+                             '#d00000',
+                             '#faa307',
+                             '#6c757d'
+                         ],
+                         borderWidth: 1
+                     }]
+                 };
+
+                 const config = {
+                     type: 'pie', // or 'doughnut'
+                     data: data,
+                     options: {
+                         responsive: true,
+                         maintainAspectRatio: false, // Allow resizing based on container
+                         plugins: {
+                             legend: {
+                                 position: 'top',
+                             },
+                             title: {
+                                 display: false,
+                             },
+                             tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed !== null) {
+                                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                            const percentage = total > 0 ? Math.round((context.parsed / total) * 100) : 0;
+                                            label += `${context.parsed} (${percentage}%)`;
+                                        }
+                                        return label;
+                                    }
+                                }
+                             }
+                         }
+                     }
+                 };
+
+                 // Destroy previous chart instance if it exists
+                 if (leadTypeChartInstance) {
+                     leadTypeChartInstance.destroy();
+                 }
+                  // Add a check if there's data, otherwise show a message?
+                  if (hot === 0 && warm === 0 && cold === 0) {
+                    // Optionally display a message instead of an empty chart
+                     leadTypeChartCtx.clearRect(0, 0, leadTypeChartCtx.canvas.width, leadTypeChartCtx.canvas.height); // Clear canvas
+                     leadTypeChartCtx.font = "16px " + getComputedStyle(document.body).fontFamily;
+                     leadTypeChartCtx.fillStyle = "#6c757d";
+                     leadTypeChartCtx.textAlign = "center";
+                     leadTypeChartCtx.fillText("No lead data available for chart.", leadTypeChartCtx.canvas.width / 2, leadTypeChartCtx.canvas.height / 2);
+                     leadTypeChartInstance = null; // Ensure instance is nullified
+                     return;
+                 }
+
+                 leadTypeChartInstance = new Chart(leadTypeChartCtx, config);
+             }
+
+             function renderLeadTrendChart() {
+                 if (!leadTrendChartCtx) {
+                     console.warn("Lead Trend Chart canvas context not found.");
+                     return;
+                 }
+
+                 // Group leads by date (e.g., daily)
+                 const leadsByDate = state.leads.reduce((acc, lead) => {
+                    if (lead.createdAt) {
+                         // Use YYYY-MM-DD format for reliable sorting
+                        const date = lead.createdAt.substring(0, 10);
+                        acc[date] = (acc[date] || 0) + 1;
+                    }
+                    return acc;
+                 }, {});
+
+                // Create a complete list of dates from the first lead to today
+                const allDates = {};
+                 const sortedDates = Object.keys(leadsByDate).sort((a, b) => new Date(a) - new Date(b));
+                 if (sortedDates.length > 0) {
+                    let currentDate = new Date(sortedDates[0]);
+                    const today = new Date();
+                    today.setHours(0,0,0,0); // Normalize today's date
+
+                    while(currentDate <= today) {
+                        const dateString = currentDate.toISOString().substring(0, 10);
+                        allDates[dateString] = leadsByDate[dateString] || 0; // Use 0 if no leads on that day
+                        currentDate.setDate(currentDate.getDate() + 1);
+                    }
+                 }
+
+                const chartLabels = Object.keys(allDates); // Already sorted chronologically
+                const chartData = Object.values(allDates);
+
+
+                const data = {
+                    labels: chartLabels,
+                    datasets: [{
+                        label: 'Leads Acquired per Day',
+                        data: chartData,
+                        fill: true, // Fill area under line
+                        backgroundColor: 'rgba(10, 147, 150, 0.2)', // Light fill color
+                        borderColor: 'rgb(10, 147, 150)', // var(--secondary-color)
+                        tension: 0.1, // Slight curve
+                        pointBackgroundColor: 'rgb(10, 147, 150)',
+                         pointRadius: 3
+                    }]
+                };
+
+                 const config = {
+                     type: 'line',
+                     data: data,
+                     options: {
+                         responsive: true,
+                         maintainAspectRatio: false,
+                         scales: {
+                             y: {
+                                 beginAtZero: true,
+                                 ticks: { // Ensure only integers on y-axis
+                                      stepSize: 1,
+                                      precision: 0
+                                  }
+                             },
+                             x: {
+                                 title: {
+                                     display: true,
+                                     text: 'Date'
+                                 }
+                             }
+                         },
+                          plugins: {
+                             legend: { display: false },
+                              title: { display: false }
+                         }
+                     }
+                 };
+
+                 if (leadTrendChartInstance) {
+                    leadTrendChartInstance.destroy();
+                 }
+
+                  // Add check for data before rendering
+                  if (chartLabels.length === 0) {
+                     leadTrendChartCtx.clearRect(0, 0, leadTrendChartCtx.canvas.width, leadTrendChartCtx.canvas.height); // Clear canvas
+                     leadTrendChartCtx.font = "16px " + getComputedStyle(document.body).fontFamily;
+                     leadTrendChartCtx.fillStyle = "#6c757d";
+                     leadTrendChartCtx.textAlign = "center";
+                     leadTrendChartCtx.fillText("No lead acquisition trend data available.", leadTrendChartCtx.canvas.width / 2, leadTrendChartCtx.canvas.height / 2);
+                     leadTrendChartInstance = null; // Ensure instance is nullified
+                     return;
+                  }
+
+                leadTrendChartInstance = new Chart(leadTrendChartCtx, config);
+             }
+
+
+            // --- Settings ---
+            settingsForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                state.settings.theme = document.getElementById('ui-theme').value;
+                state.settings.notifyHotLead = document.getElementById('notify-hot-lead').checked;
+                // state.settings.notifyFollowup = document.getElementById('notify-followup').checked; // If implemented
+                state.settings.defaultExportFormat = document.getElementById('default-export').value;
+
+                saveState();
+                applySettings();
+                displayAlert('Settings saved successfully!', 'success');
+            });
+
+            function loadSettingsForm() {
+                document.getElementById('ui-theme').value = state.settings.theme || 'default';
+                document.getElementById('notify-hot-lead').checked = state.settings.notifyHotLead !== false; // default true
+                // document.getElementById('notify-followup').checked = state.settings.notifyFollowup || false; // If implemented
+                document.getElementById('default-export').value = state.settings.defaultExportFormat || 'xlsx';
+            }
+
+            function applySettings() {
+                // Apply theme (placeholder - requires CSS changes or class switching)
+                console.log("Applying theme:", state.settings.theme);
+                // Example: document.body.className = `theme-${state.settings.theme}`;
+                 // Could swap CSS variables here for theming
+            }
+
+            // --- Feedback ---
+            feedbackForm.addEventListener('submit', (e) => {
+                 e.preventDefault();
+                 const type = document.getElementById('feedback-type').value;
+                 const message = document.getElementById('feedback-message').value;
+
+                 if (!message.trim()) {
+                     displayAlert('Please enter your feedback message.', 'info');
+                     return;
+                 }
+
+                 // Use mailto: to send feedback
+                 const subject = encodeURIComponent(`Lead App Feedback (${type})`);
+                 const body = encodeURIComponent(`Feedback Type: ${type}\n\nMessage:\n${message}\n\n---\nApp State (Optional Debug Info):\n${JSON.stringify(state.settings)}`); // Add basic settings state
+                 // Replace with your actual feedback email address
+                 const feedbackEmail = "feedback@yourcompany.com"; // <<-- IMPORTANT: Change this email
+
+                 const mailtoLink = `mailto:${feedbackEmail}?subject=${subject}&body=${body}`;
+
+                 // Check if mailto link is too long (rare, but possible)
+                 if (mailtoLink.length > 2000) {
+                      displayAlert('Feedback message is too long to send via email link. Please copy and paste manually.', 'error');
+                      // Optionally copy to clipboard
+                      navigator.clipboard.writeText(`Subject: ${decodeURIComponent(subject)}\n\n${decodeURIComponent(body)}`)
+                         .then(() => displayAlert('Feedback content copied to clipboard for manual sending.', 'info'))
+                         .catch(() => {}); // Ignore copy errors
+                      return;
+                 }
+
+                 window.location.href = mailtoLink;
+
+                 displayAlert('Thank you! Please review and send the email using your mail client.', 'success');
+                 feedbackForm.reset(); // Clear the form
+            });
+
+
+            // --- Utility Functions ---
+             function displayAlert(message, type = 'info', duration = 4000) {
+                const alertId = `alert-${Date.now()}`; // Unique ID for each alert
+                const alertDiv = document.createElement('div');
+                alertDiv.id = alertId;
+                alertDiv.className = `alert alert-${type}`;
+                alertDiv.setAttribute('role', 'alert'); // Accessibility
+                alertDiv.innerHTML = `${message} <button type="button" class="close-btn" aria-label="Close" onclick="this.parentElement.style.opacity='0'; setTimeout(() => this.parentElement.remove(), 500)">&times;</button>`; // Use button for close
+
+                // Ensure only a few alerts are shown at once (e.g., max 3)
+                const existingAlerts = alertContainer.querySelectorAll('.alert');
+                if (existingAlerts.length >= 3) {
+                    existingAlerts[existingAlerts.length - 1].remove(); // Remove the oldest
+                }
+
+                alertContainer.prepend(alertDiv); // Add to top
+
+                 // Trigger reflow to enable animation
+                 alertDiv.offsetHeight;
+                 alertDiv.classList.add('show'); // Make it visible
+
+                // Auto-dismiss after duration (if duration is not 0 or negative)
+                if (duration > 0) {
+                    setTimeout(() => {
+                        const stillExists = document.getElementById(alertId);
+                        if (stillExists) {
+                            stillExists.style.opacity = '0';
+                            setTimeout(() => stillExists.remove(), 500); // Remove from DOM after fade out
+                        }
+                    }, duration);
+                }
+            }
+
+            // --- three.js Background ---
+            let scene, camera, renderer, stars;
+
+            function init3DBackground() {
+                const container = document.getElementById('bg-canvas');
+                if (!container || !window.THREE) {
+                     console.warn("three.js library not loaded or container not found. Skipping 3D background.");
+                     return; // Exit if three.js isn't loaded
+                }
+
+                 try {
+                     // Scene
+                     scene = new THREE.Scene();
+
+                     // Camera
+                     camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
+                     camera.position.z = 1; // Start closer
+
+                     // Renderer
+                     renderer = new THREE.WebGLRenderer({ canvas: container, alpha: true, antialias: true });
+                     renderer.setSize(window.innerWidth, window.innerHeight);
+                     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Optimize for performance
+
+                     // Simple Starfield Geometry
+                     const starGeometry = new THREE.BufferGeometry();
+                     const vertices = [];
+                     const numStars = 10000;
+
+                     for (let i = 0; i < numStars; i++) {
+                         // Distribute stars in a sphere
+                         const phi = Math.acos(-1 + (2 * i) / numStars);
+                         const theta = Math.sqrt(numStars * Math.PI) * phi;
+
+                         const x = 500 * Math.sin(phi) * Math.cos(theta);
+                         const y = 500 * Math.sin(phi) * Math.sin(theta);
+                         const z = 500 * Math.cos(phi);
+
+                         vertices.push(x, y, z);
+                     }
+
+                     starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+
+                      // Star Material
+                     const starMaterial = new THREE.PointsMaterial({
+                         color: 0xffffff,
+                         size: 0.5, // Adjust size
+                         sizeAttenuation: true, // Stars smaller further away
+                         transparent: true,
+                         opacity: 0.8,
+                         map: createStarTexture() // Optional: Use a texture for softer stars
+                     });
+
+                     stars = new THREE.Points(starGeometry, starMaterial);
+                     scene.add(stars);
+
+                     // Handle Window Resize
+                     window.addEventListener('resize', onWindowResize, false);
+
+                     // Animation Loop
+                     animateBackground();
+                 } catch (error) {
+                     console.error("Failed to initialize 3D background:", error);
+                     if (container) container.style.display = 'none'; // Hide canvas on error
+                 }
+            }
+
+             // Optional: Create a simple white dot texture for softer stars
+            function createStarTexture() {
+                 const canvas = document.createElement('canvas');
+                 canvas.width = 16;
+                 canvas.height = 16;
+                 const context = canvas.getContext('2d');
+                 const gradient = context.createRadialGradient(canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, canvas.width / 2);
+                 gradient.addColorStop(0, 'rgba(255,255,255,1)');
+                 gradient.addColorStop(0.2, 'rgba(255,255,255,0.8)');
+                 gradient.addColorStop(1, 'rgba(255,255,255,0)');
+                 context.fillStyle = gradient;
+                 context.fillRect(0, 0, canvas.width, canvas.height);
+                 return new THREE.CanvasTexture(canvas);
+             }
+
+            function onWindowResize() {
+                 if (!camera || !renderer) return;
+                 camera.aspect = window.innerWidth / window.innerHeight;
+                 camera.updateProjectionMatrix();
+                 renderer.setSize(window.innerWidth, window.innerHeight);
+                 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            }
+
+            const clock = new THREE.Clock(); // Use clock for smoother animation
+
+            function animateBackground() {
+                if (!renderer || !scene || !camera || !stars) return; // Check if initialized
+
+                const elapsedTime = clock.getElapsedTime();
+
+                 // Subtle rotation
+                 stars.rotation.y = elapsedTime * 0.02;
+                 stars.rotation.x = elapsedTime * 0.01;
+
+                 renderer.render(scene, camera);
+                 requestAnimationFrame(animateBackground); // Loop
+            }
+
+
+            // --- Initialization ---
+            loadState(); // Load data from localStorage first
+            showPage(initialPageId); // Show the correct starting page based on hash or default
+            init3DBackground(); // Initialize the background animation
+            console.log('Lead Management App Initialized.');
+            // Initial render of table and analytics on load (if on those pages)
+             if (initialPageId === 'home') renderLeadsTable();
+             if (initialPageId === 'analytics') updateAnalytics();
+             if (initialPageId === 'email') populateLeadSelect();
+             if (initialPageId === 'settings') loadSettingsForm();
+             if (initialPageId === 'export') loadExportSettings();
+
+
+        }); // End DOMContentLoaded
+    </script>
+</body>
+</html>
