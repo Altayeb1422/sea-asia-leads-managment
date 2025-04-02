@@ -1277,8 +1277,8 @@
 
                 // Construct prompt for DeepSeek
                  // Make the placeholder more specific if you can
-                 const yourCompanyName = "Our Company"; // REPLACE with your actual company name
-                 const yourOfferings = "advanced maritime solutions, logistics software, and vessel technology"; // REPLACE or refine
+                 const yourCompanyName = "Shandong Wanrun Intelligent Equipment Co.Ltd"; // REPLACE with your actual company name
+                 const yourOfferings = "advanced maritime solutions, Our high-performance dredgers and water weed harvesters deliver efficient aquatic solutions."; // REPLACE or refine
                  const prompt = `Generate a personalized and persuasive follow-up email for a lead met at Sea Asia 2025.
                  From: ${yourCompanyName}
                  To: ${lead.name || 'Valued Contact'} (${lead.position || 'Representative'} at ${lead.company})
@@ -1290,7 +1290,7 @@
                  2. Start with a personalized greeting (use their name).
                  3. Briefly and warmly reference meeting them at Sea Asia 2025. Mentioning the event context is key.
                  4. Connect ${yourCompanyName}'s offerings (specifically ${yourOfferings}) to their company (${lead.company}) or their potential needs (${lead.productNeeds || 'our discussion'}). Be relevant.
-                 5. Include ONE clear call to action (e.g., "Would you be available for a brief 15-minute call next week to explore this further?", "May I send over a brochure detailing [specific solution]?", "You can find more information on our website at [Your Website]").
+                 5. Include ONE clear call to action (e.g., "If you're open to further discussion, let's collaborate to explore how our solutions can benefit your operations.", "We can customize our designs and solutions to meet your specific needs.", "You can find more information on our website at [Your Website]").
                  6. Maintain a professional, concise, and helpful tone. Avoid overly salesy language.
 
                  Output ONLY the subject line and the email body, separated by "---BODY---".
